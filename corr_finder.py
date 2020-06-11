@@ -41,13 +41,13 @@ class Correspondence:
 
         Parameters
         ----------
-        coor_2d : Numpy.ndarray
+        coor_2d : numpy.ndarray
             a coordinate in a dicom image
             shape should be (4,) (ex. [row_corr, col_coor, 0, 1])
 
         Returns
         -------
-        Numpy.ndarray
+        numpy.ndarray
             3d coordinate
         """
         return np.matmul(self.affine_mat, coor_2d)
