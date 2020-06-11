@@ -6,7 +6,7 @@ import SimpleITK as sitk
 
 
 class DicomDecoder:
-    """Reasons for using two different libraries to decode a dicom file.
+    """Reasons for using two different libraries to decode a dicom file
     Here, I used pydicom library to read a dicom information and SimpleITK to decode a dicom image.
     This is because SimpleITK decodes a dicom image better than pydicom.
     Sometimes pydicom can't decode a dicom image due to a different decoding style.
