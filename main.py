@@ -28,6 +28,10 @@ def read_opt(args: list) -> argparse.Namespace:
     return parse.parse_args(args)
 
 
+def print_files(file_li: list, interval: tuple, sep='\n') -> None:
+    print(*file_li[interval[0]:interval[1]], sep=sep)
+
+
 if __name__ == '__main__':
     # read arguments
     opts = read_opt(sys.argv[1::])
@@ -40,3 +44,6 @@ if __name__ == '__main__':
 
     imgs = dcmDecoder.get_imgs()
     slices = dcmDecoder.get_slices()
+    files = dcmDecoder.get_files()
+
+    print(type(slices[0]))
