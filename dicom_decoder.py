@@ -109,3 +109,11 @@ class DicomDecoder:
             deepcopy of dicom images
         """
         return cp.deepcopy(self.imgs)
+
+    def get_thickness(self) -> np.float64:
+        try:
+            return np.float64(self.info[0].SliceThickness)
+        except AttributeError:
+            z1 = np.float64(self.info[0].ImagePositionPatient[2])
+            z2 = np.float64(self.info[1].ImagePositionPatient[2])
+            return np.abs(z1 - z2)
