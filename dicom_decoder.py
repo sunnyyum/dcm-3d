@@ -28,6 +28,7 @@ class DicomDecoder:
         self.info = None
         self.files = None
         self.imgs = None
+        self.is_hounsfield = False
 
     def read_info(self) -> None:
         """Read information of dicom files
@@ -60,6 +61,25 @@ class DicomDecoder:
         # By casting to int16, it can maintain the same data type
         self.imgs = self.imgs.astype(np.int16)
 
+    def calculate_hounsfield(self) -> None:
+        # calculate hounsfield units, once
+        if self.is_hounsfield:
+            print('Hounsfield unit is already calculated')
+            return
+
+        self.is_hounsfield = True
+
+        # calculate hounsfield units(HU)
+        intercept = self.info[0].RescaleIntercept
+        slope = np.float64(self.info[0].RescaleSlope)
+
+        # HU unit = slope * value + intercept
+        self.imgs = slope * self.imgs.astype(np.float64)
+        self.imgs += np.float64(intercept)
+
+        # casting back to int16
+        self.imgs.astype(np.int16)
+
     def get_files(self) -> list:
         """Return file list that is sorted by InstanceNumber of a dicom file
 
@@ -70,7 +90,7 @@ class DicomDecoder:
         """
         return cp.deepcopy(self.files)
 
-    def get_slices(self) -> list:
+    def get_info(self) -> list:
         """Return dicom information list that is sorted by InstanceNumber of a dicom file
 
         Returns
