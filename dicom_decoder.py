@@ -72,12 +72,12 @@ class DicomDecoder:
         self.is_hounsfield = True
 
         # calculate hounsfield units(HU)
-        intercept = self.info[0].RescaleIntercept
+        intercept = np.float64(self.info[0].RescaleIntercept)
         slope = np.float64(self.info[0].RescaleSlope)
 
         # HU unit = slope * value + intercept
         self.imgs = slope * self.imgs.astype(np.float64)
-        self.imgs += np.float64(intercept)
+        self.imgs += intercept
 
         # casting back to int16
         self.imgs.astype(np.int16)
