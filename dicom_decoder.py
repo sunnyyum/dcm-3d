@@ -62,6 +62,8 @@ class DicomDecoder:
         self.imgs = self.imgs.astype(np.int16)
 
     def calculate_hounsfield(self) -> None:
+        """Calculate Hounsfield unit (HU)
+        """
         # calculate hounsfield units, once
         if self.is_hounsfield:
             print('Hounsfield unit is already calculated')
@@ -111,6 +113,14 @@ class DicomDecoder:
         return cp.deepcopy(self.imgs)
 
     def get_thickness(self) -> np.float64:
+        """Return the thickness in the dicom image set
+        Assume that the thickness is uniform across the dicom image set
+
+        Returns
+        -------
+        np.float64
+            the thickness in the dicom image set
+        """
         try:
             return np.float64(self.info[0].SliceThickness)
         except AttributeError:
