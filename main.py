@@ -1,6 +1,9 @@
 import dicom_decoder
 import sys
 import argparse
+import corr_finder
+import graphic_handler
+import numpy as np
 
 
 def read_opt(args: list) -> argparse.Namespace:
@@ -41,9 +44,29 @@ if __name__ == '__main__':
     dcmDecoder = dicom_decoder.DicomDecoder(dir_path)
     dcmDecoder.read_info()
     dcmDecoder.convert_dcm2img()
+    dcmDecoder.calculate_hounsfield()
 
-    imgs = dcmDecoder.get_imgs()
-    slices = dcmDecoder.get_slices()
-    files = dcmDecoder.get_files()
+    corr = corr_finder.Correspondence(dcmDecoder.get_info())
+    print('Collecting label location...', end=' ', flush=True)
+    indices = dcmDecoder.collect_label_loc()
+    print('Done')
 
-    print(type(slices[0]))
+    print('Converting 2d coordinate to 3d coordinate...', end=' ', flush=True)
+    points = corr.convert_2d_3d(indices)
+    print('Done')
+
+    print('Converting 3d point to 3d voxel center point...', end=' ', flush=True)
+    voxel_points, voxel_size = corr.calculate_voxel_center(points)
+    print('Done')
+
+    gh = graphic_handler.GrphicHandler(voxel_points)
+
+    # print('Creating voxels...', end=' ', flush=True)
+    # grid = gh.convert_point2voxel(voxel_size)
+    # print('Done')
+    # grid.plot(show_grid=True)
+
+    # print('Creating mesh...', end=' ', flush=True)
+    # mesh = gh.convert_point2mesh()
+    # print('Done')
+    # mesh.plot()
