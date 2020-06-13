@@ -82,6 +82,36 @@ class DicomDecoder:
         # casting back to int16
         self.imgs.astype(np.int16)
 
+    def collect_label_loc(self) -> list:
+        """Collect labeled pixel location
+        collect labeled pixel location, where the value is more than 0
+
+        Returns
+        -------
+        list
+            indices of labeled pixel in each dicom image
+        """
+
+        if not self.is_hounsfield:
+            print('Not converted into Hounsfield unit, yet')
+            return
+
+        # not to compromise original images,
+        # use the copy of original images
+        imgs = self.get_imgs()
+        imgs[imgs <= 0] = 0
+
+        label_loc = []
+        len_dcm = imgs.shape[0]
+        for index in range(len_dcm):
+            locs = np.nonzero(imgs[index])
+            # need to revert
+            # when you plot the original image, row and column of an image are inverted
+            indices = np.transpose((locs[1], locs[0]))
+            label_loc.append((index, indices))
+
+        return label_loc
+
     def get_files(self) -> list:
         """Return file list that is sorted by InstanceNumber of a dicom file
 
@@ -111,19 +141,3 @@ class DicomDecoder:
             deepcopy of dicom images
         """
         return cp.deepcopy(self.imgs)
-
-    def get_thickness(self) -> np.float64:
-        """Return the thickness in the dicom image set
-        Assume that the thickness is uniform across the dicom image set
-
-        Returns
-        -------
-        np.float64
-            the thickness in the dicom image set
-        """
-        try:
-            return np.float64(self.info[0].SliceThickness)
-        except AttributeError:
-            z1 = np.float64(self.info[0].ImagePositionPatient[2])
-            z2 = np.float64(self.info[1].ImagePositionPatient[2])
-            return np.abs(z1 - z2)
