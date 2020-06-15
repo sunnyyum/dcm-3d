@@ -74,6 +74,9 @@ class Correspondence:
             first element  : coordinates that each of them is the center of a voxel point
             second element : a size of voxel
         """
+        if coor_3d.shape[1] != 3:
+            raise ValueError('input size must be 3')
+
         # get the thickness in the dicom image set
         # assume that the thickness is uniform across the dicom image set
         try:
@@ -91,6 +94,6 @@ class Correspondence:
         # calculate the 3D coordinate for the center of a voxel point
         voxel_coor = []
         for point in coor_3d:
-            voxel_coor.append(point[:3] + (voxel_size / 2))
+            voxel_coor.append(point + (voxel_size / 2))
 
         return np.asarray(voxel_coor, dtype=np.float64), voxel_size
