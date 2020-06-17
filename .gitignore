@@ -2,3 +2,4 @@
 **/__pycache__
 .idea/
 *.ply
+main_*.py
