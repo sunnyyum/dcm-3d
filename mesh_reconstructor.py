@@ -1,6 +1,8 @@
 import vtk
+from vtk.util import numpy_support
 import pyvista as pv
 import math
+import numpy as np
 
 
 class MeshReconstructor:
@@ -13,6 +15,40 @@ class MeshReconstructor:
         mesh = point_cloud.delaunay_3d(alpha=alpha, progress_bar=True)
         mesh = mesh.extract_geometry().triangulate()
         return mesh
+
+    @staticmethod
+    def convert_np2volume(imgs: np.ndarray, bounds, size, smooth=False):
+        vtk_data_arr = numpy_support.numpy_to_vtk(
+            num_array=imgs.ravel(order='F'),
+            deep=True,
+            array_type=vtk.VTK_FLOAT
+        )
+
+        dims = imgs.shape
+        whiteImage = vtk.vtkImageData()
+        whiteImage.SetDimensions(dims)
+        whiteImage.SetExtent(0, dims[0] - 1, 0, dims[1] - 1, 0, dims[2] - 1)
+        whiteImage.ComputeBounds()
+
+        whiteImage.SetSpacing(size)
+
+        origin = [0] * 3
+        origin[0] = bounds[0]
+        origin[1] = bounds[2]
+        origin[2] = bounds[4]
+        whiteImage.SetOrigin(origin)
+
+        whiteImage.GetPointData().SetScalars(vtk_data_arr)
+
+        if smooth:
+            # smooth with deviation 8
+            gaussianSmoothFilter = vtk.vtkImageGaussianSmooth()
+            gaussianSmoothFilter.SetInputData(whiteImage)
+            gaussianSmoothFilter.SetStandardDeviation(8.)
+            gaussianSmoothFilter.Update()
+            whiteImage = gaussianSmoothFilter.GetOutput()
+
+        return whiteImage
 
     @staticmethod
     def convert_poly2volume(polydata, size, smooth=False):
@@ -41,7 +77,7 @@ class MeshReconstructor:
         origin[2] = bounds[4]
         whiteImage.SetOrigin(origin)
 
-        whiteImage.AllocateScalars(vtk.VTK_UNSIGNED_CHAR, 1)
+        whiteImage.AllocateScalars(vtk.VTK_FLOAT, 1)
 
         # marking 3d points in vtkimagedata
         inval = 255
@@ -81,7 +117,7 @@ class MeshReconstructor:
     def marchingCubes(volume) -> pv.PolyData:
         # use marching cube algorithm
         cf = vtk.vtkMarchingCubes()
-        cf.SetInputData(volume.GetOutput())
+        cf.SetInputData(volume)
         cf.SetValue(0, 1)
         cf.Update()
 
@@ -101,7 +137,7 @@ class MeshReconstructor:
     def flyingEdges(volume) -> pv.PolyData:
         # use flying edges algorithm
         fe = vtk.vtkFlyingEdges3D()
-        fe.SetInputData(volume.GetOutput())
+        fe.SetInputData(volume)
         fe.SetValue(0, 1)
         fe.ComputeNormalsOn()
         fe.Update()
@@ -114,20 +150,20 @@ class MeshReconstructor:
     def discreteMarchingCubes(volume) -> pv.PolyData:
         # use discrete marching cube algorithm
         dm = vtk.vtkDiscreteMarchingCubes()
-        dm.SetInputData(volume.GetOutput())
+        dm.SetInputData(volume)
         dm.ComputeNormalsOn()
-        dm.GenerateValues(1, 0, 255)
+        # dm.GenerateValues(1, 0, 255)
         dm.Update()
 
         mesh = dm.GetOutput()
-        # mesh = pv.wrap(mesh)
+        mesh = pv.wrap(mesh)
         return mesh
 
     @staticmethod
     def synchronizedTemplates3D(volume) -> pv.PolyData:
         # use SynchronizedTemplates3D algorithm
         st = vtk.vtkSynchronizedTemplates3D()
-        st.SetInputData(volume.GetOutput())
+        st.SetInputData(volume)
         st.SetValue(0, 1)
         st.ComputeNormalsOn()
         st.Update()

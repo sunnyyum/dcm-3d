@@ -77,6 +77,16 @@ class Correspondence:
         if coor_3d.shape[1] != 3:
             raise ValueError('input size must be 3')
 
+        voxel_size = self.calculate_voxel_size()
+
+        # calculate the 3D coordinate for the center of a voxel point
+        voxel_coor = []
+        for point in coor_3d:
+            voxel_coor.append(point + (voxel_size / 2))
+
+        return np.asarray(voxel_coor, dtype=np.float64), voxel_size
+
+    def calculate_voxel_size(self):
         # get the thickness in the dicom image set
         # assume that the thickness is uniform across the dicom image set
         try:
@@ -91,9 +101,15 @@ class Correspondence:
         pixel_space = np.asarray(self.dcm_info[0].PixelSpacing, dtype=np.float64)
 
         voxel_size = np.append(pixel_space, thickness)
-        # calculate the 3D coordinate for the center of a voxel point
-        voxel_coor = []
-        for point in coor_3d:
-            voxel_coor.append(point + (voxel_size / 2))
+        return voxel_size
 
-        return np.asarray(voxel_coor, dtype=np.float64), voxel_size
+    def find_boundary(self, coor_3d: np.ndarray):
+        coor_3d = coor_3d.transpose()
+        bounds = np.zeros(6)
+        for i in range(coor_3d.shape[0]):
+            bounds[2 * i] = np.floor(np.min(coor_3d[i]))
+            bounds[2 * i + 1] = np.ceil(np.max(coor_3d[i]))
+
+        bounds = bounds.astype(np.int16)
+
+        return bounds
