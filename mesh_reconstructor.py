@@ -51,6 +51,70 @@ class MeshReconstructor:
         return whiteImage
 
     @staticmethod
+    def pad_imagedata(orig_image_data: vtk.vtkImageData):
+        image_data = vtk.vtkImageData()
+        image_data.DeepCopy(orig_image_data)
+
+        dim = image_data.GetDimensions()
+        point_data = image_data.GetPointData()
+        # Ensure that only one array exists within the 'vtkPointData' object
+        assert (point_data.GetNumberOfArrays() == 1)
+        # Get the `vtkArray` (or whatever derived type) which is needed for the `numpy_support.vtk_to_numpy` function
+        point_arr = point_data.GetArray(0)
+
+        # Convert the `vtkArray` to a NumPy array
+        image_arr = numpy_support.vtk_to_numpy(point_arr)
+        # Reshape the NumPy array to 3D using 'ConstPixelDims' as a 'shape'
+        image_arr = image_arr.reshape(dim, order='F')
+
+        zero_pad = np.zeros((dim[0], dim[1], 1))
+        image_arr = np.concatenate((zero_pad, image_arr, zero_pad), axis=2)
+        dim_pad = image_arr.shape
+
+        image_data.SetDimensions(dim_pad)
+        image_data.SetExtent(0, dim_pad[0] - 1, 0, dim_pad[1] - 1, 0, dim_pad[2] - 1)
+
+        origin = image_data.GetOrigin()
+        spacing = image_data.GetSpacing()
+
+        origin_update = [origin[0], origin[1], origin[2]]
+        origin_update[2] -= spacing[2]
+        image_data.SetOrigin(origin_update)
+        image_data.ComputeBounds()
+
+        vtk_data_arr = numpy_support.numpy_to_vtk(
+            num_array=image_arr.ravel(order='F'),
+            deep=True,
+            array_type=vtk.VTK_FLOAT
+        )
+        image_data.GetPointData().SetScalars(vtk_data_arr)
+        return image_data
+
+    @staticmethod
+    def combine_img_poly(image_data: vtk.vtkImageData, polydata):
+        origin = image_data.GetOrigin()
+        spacing = image_data.GetSpacing()
+        outval = 0
+
+        # from polydata to image volume
+        pol2stenc = vtk.vtkPolyDataToImageStencil()
+        pol2stenc.SetInputData(polydata)
+
+        pol2stenc.SetOutputOrigin(origin)
+        pol2stenc.SetOutputSpacing(spacing)
+        pol2stenc.SetOutputWholeExtent(image_data.GetExtent())
+        pol2stenc.Update()
+
+        imgstenc = vtk.vtkImageStencil()
+        imgstenc.SetInputData(image_data)
+        imgstenc.SetStencilConnection(pol2stenc.GetOutputPort())
+        imgstenc.ReverseStencilOff()
+        imgstenc.SetBackgroundValue(outval)
+        imgstenc.Update()
+
+        return imgstenc
+
+    @staticmethod
     def convert_poly2volume(polydata, size, smooth=False):
         whiteImage = vtk.vtkImageData()
         # getting bounds

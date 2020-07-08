@@ -48,13 +48,15 @@ class GraphicGenerator:
     def convert_voxel2mesh(self, voxels: pv.UnstructuredGrid, voxel_size: np.ndarray, smooth=False) -> pv.PolyData:
         voxel_polydata = self.voxel2polydata(voxels)
         volume = self.mr.convert_poly2volume(voxel_polydata, voxel_size, smooth=smooth)
-        mesh = self.mr.marchingCubes(volume.GetOutput())
-        return mesh
+        volume_pad = self.mr.pad_imagedata(volume.GetOutput())
+        mesh = self.mr.marchingCubes(volume_pad)
+        return mesh, volume_pad
 
     def convert_img2mesh(self, imgs: np.ndarray, bounds, size, smooth=False) -> pv.PolyData:
         volume = self.mr.convert_np2volume(imgs, bounds, size, smooth=smooth)
-        mesh = self.mr.discreteMarchingCubes(volume)
-        return mesh
+        volume_pad = self.mr.pad_imagedata(volume)
+        mesh = self.mr.discreteMarchingCubes(volume_pad)
+        return mesh, volume_pad
 
     def set_points(self, points):
         self.points = points
@@ -65,8 +67,8 @@ class GraphicGenerator:
         geo_filter.SetInputData(voxels)
         geo_filter.Update()
         polydata = geo_filter.GetOutput()
-        better = pv.wrap(polydata)
-        return better
+        polydata_pv = pv.wrap(polydata)
+        return polydata_pv
 
     @staticmethod
     def count_voxel(voxel: pv.UnstructuredGrid) -> int:
@@ -93,6 +95,7 @@ class GraphicGenerator:
         mesh = pv.wrap(mesh)
         return mesh
 
-    @staticmethod
-    def save_object(mesh: pv.PolyData, output_name: str):
+    def save_object(self, mesh: pv.PolyData, output_name: str):
+        if type(mesh).__name__ != 'PolyData':
+            mesh = self.voxel2polydata(mesh)
         mesh.save(mesh, output_name)
