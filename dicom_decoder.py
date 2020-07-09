@@ -55,6 +55,7 @@ class DicomDecoder:
         # read each dicom file to convert into an image
         self.imgs = [sitk.ReadImage(f) for f in self.files]
         # convert images into array and stack them
+        # shape = (dicom image row, dicom image column, the number of dicom images)
         self.imgs = np.stack([np.squeeze(sitk.GetArrayFromImage(img)) for img in self.imgs], axis=2)
 
         # the dicom images can be encoded in different data type
@@ -102,13 +103,12 @@ class DicomDecoder:
         imgs[imgs <= 0] = 0
 
         label_loc = []
-        len_dcm = imgs.shape[0]
+        len_dcm = imgs.shape[2]
         for index in range(len_dcm):
-            locs = np.nonzero(imgs[index])
-            # need to revert
-            # when you plot the original image, row and column of an image are inverted
-            indices = np.transpose((locs[1], locs[0]))
-            label_loc.append((index, indices))
+            locs = np.nonzero(imgs[:, :, index])
+            # collect non zero (labeled) indexes
+            indexes = np.transpose((locs[0], locs[1]))
+            label_loc.append((index, indexes))
 
         return label_loc
 
@@ -117,19 +117,19 @@ class DicomDecoder:
             print('Not converted into Hounsfield unit, yet')
             return
 
-        if not self.imgs.any():
+        if not isinstance(self.imgs, np.ndarray) or not self.imgs.any():
             print('DICOM files are not loaded')
             return
 
-        edge_loc = []
+        edge_point_loc = []
         row, col, _ = self.imgs.shape
 
         # 0,0  row+1,0  0,col+1  row+1,col+1
         for index in [0, -1]:
-            indices = [[0, 0], [0, row + 1], [col + 1, 0], [col + 1, row + 1]]
-            edge_loc.append((index, np.asarray(indices)))
+            indices = [[0, 0], [row + 1, 0], [0, col + 1], [row + 1, col + 1]]
+            edge_point_loc.append((index, np.asarray(indices)))
 
-        return edge_loc
+        return edge_point_loc
 
     def get_files(self) -> list:
         """Return file list that is sorted by InstanceNumber of a dicom file
