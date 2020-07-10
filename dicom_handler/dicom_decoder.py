@@ -3,6 +3,7 @@ import numpy as np
 import os
 import copy as cp
 import SimpleITK as sitk
+from typing import List
 
 
 class DicomDecoder:
@@ -83,13 +84,13 @@ class DicomDecoder:
         # casting back to int16
         self.imgs = self.imgs.astype(np.int16)
 
-    def collect_label_loc(self) -> list:
+    def collect_label_loc(self) -> List:
         """Collect labeled pixel location
         collect labeled pixel location, where the value is more than 0
 
         Returns
         -------
-        list
+        List
             indices of labeled pixel in each dicom image
         """
 
@@ -112,14 +113,12 @@ class DicomDecoder:
 
         return label_loc
 
-    def collect_edge(self):
+    def collect_edge(self) -> List:
         if not self.is_hounsfield:
-            print('Not converted into Hounsfield unit, yet')
-            return
+            assert 'Not converted into Hounsfield unit, yet'
 
-        if not isinstance(self.imgs, np.ndarray) or not self.imgs.any():
-            print('DICOM files are not loaded')
-            return
+        if not isinstance(self.imgs, np.ndarray):
+            assert 'DICOM files are not loaded'
 
         edge_point_loc = []
         row, col, _ = self.imgs.shape
@@ -131,22 +130,22 @@ class DicomDecoder:
 
         return edge_point_loc
 
-    def get_files(self) -> list:
+    def get_files(self) -> List:
         """Return file list that is sorted by InstanceNumber of a dicom file
 
         Returns
         -------
-        list
+        List
             deepcopy of file list
         """
         return cp.deepcopy(self.files)
 
-    def get_info(self) -> list:
+    def get_info(self) -> List:
         """Return dicom information list that is sorted by InstanceNumber of a dicom file
 
         Returns
         -------
-        list
+        List
             deepcopy of dicom information list
         """
         return cp.deepcopy(self.info)

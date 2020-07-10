@@ -1,5 +1,6 @@
+from typing import List
+
 import numpy as np
-import pydicom
 
 
 class Correspondence:
@@ -8,12 +9,12 @@ class Correspondence:
     The Affine formula can transform a 2D coordinate in a dicom image to a 3D coordinate
     """
 
-    def __init__(self, dcm_info: pydicom.dataset.FileDataset) -> None:
+    def __init__(self, dcm_info: List) -> None:
         """Initialize the class
 
         Parameters
         ----------
-        dcm_info : pydicom.dataset.FileDataset
+        dcm_info : List
             information in a dicom file
         """
         self.dcm_info = dcm_info
@@ -36,7 +37,7 @@ class Correspondence:
                                       [Xz * col_space, Yz * row_space, 0, Sz],
                                       [0, 0, 0, 1]])
 
-    def convert_2d_3d(self, indicies: np.ndarray) -> np.ndarray:
+    def convert_2d_3d(self, indicies: List) -> np.ndarray:
         """Convert coordinate in a dicom image to 3d coordinate
 
         Parameters
