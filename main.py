@@ -3,7 +3,7 @@ import sys
 import textwrap
 
 from dicom_handler import dicom_decoder, corr_finder
-from graphic_handler import save_object
+from graphic_handler.graphic_util import save_object
 from graphic_handler.graphic_generator import *
 
 
