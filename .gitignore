@@ -3,4 +3,4 @@
 .idea/
 **/venv
 *.ply
-main_*.py
+test_main/
