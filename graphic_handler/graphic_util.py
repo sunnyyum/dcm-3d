@@ -1,5 +1,6 @@
 from typing import Union
 
+import os.path as path
 import pyvista as pv
 import vtk
 
@@ -17,10 +18,14 @@ def show_obj(file_path, turning=False, output_path=''):
         plotter.show()
         plotter.close()
     else:
+        _, ext = path.splitext(output_path)
+        if ext != '.gif':
+            assert f'{output_path} is not valid extension for gif'
+
         plotter.show(auto_close=False)
-        path = plotter.generate_orbital_path(n_points=36, shift=obj.length)
+        orbit_path = plotter.generate_orbital_path(n_points=36, shift=obj.length)
         plotter.open_gif(output_path)
-        plotter.orbit_on_path(path, write_frames=True)
+        plotter.orbit_on_path(orbit_path, write_frames=True)
         plotter.close()
 
 
