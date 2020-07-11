@@ -35,7 +35,7 @@ class DicomDecoder:
         """Read information of dicom files
         """
         # collect files in the given directory path stored
-        files = [self.dir_path + '/' + s for s in os.listdir(self.dir_path)]
+        files = [self.dir_path + s for s in os.listdir(self.dir_path)]
 
         # read information in dicom files
         info = [pydicom.read_file(s) for s in files]

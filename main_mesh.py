@@ -51,16 +51,17 @@ if __name__ == '__main__':
                                    'flying edges'],
                           ),
         ]
-        answers = inquirer.prompt(questions)
-        print(answers)
+        answer = inquirer.prompt(questions)
+        print(answer['algorithm'], answer)
 
     # decode dicom files for converting a dicom file to a dicom image
     decoder = dicom_decoder.DicomDecoder(opts.input_dir)
 
+    decoder.read_info()
+
     print('Snippet of imported files')
     print(*decoder.get_files()[0:5], sep='\n')
-
-    decoder.read_info()
+    
     decoder.convert_dcm2img()
     decoder.calculate_hounsfield()
 

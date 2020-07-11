@@ -49,5 +49,5 @@ def smooth_mesh(mesh: Union[vtk.vtkPolyData, pv.PolyData], n_iter=15, pass_band=
     return mesh
 
 
-def save_object(mesh: pv.PolyData, output_name: str):
-    mesh.save(mesh, output_name)
+def save_object(mesh, output_name: str):
+    mesh.save(output_name)
