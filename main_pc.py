@@ -37,8 +37,8 @@ if __name__ == '__main__':
 
     decoder.read_info()
 
-    print('Snippet of imported files')
-    print(*decoder.get_files()[0:5], sep='\n')
+    print('Snippet of imported files:')
+    print(*decoder.get_files()[0:3], sep='\n')
 
     decoder.convert_dcm2img()
     decoder.calculate_hounsfield()
