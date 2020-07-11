@@ -51,12 +51,7 @@ def convert_pcd2mesh(point_cloud: pv.PolyData) -> pv.PolyData:
 
 def convert_voxel2mesh(voxels: pv.UnstructuredGrid, voxel_size: np.ndarray, algo: str, combine_img=False, imgs=None,
                        smooth=False) -> pv.PolyData:
-    algorithm = {
-        'marching cubes': lambda vol: marchingCubes(vol),
-        'discrete marching cubes': lambda vol: discreteMarchingCubes(vol),
-        'synchronized templates 3D': lambda vol: synchronizedTemplates3D(vol),
-        'flying edges': lambda vol: flyingEdges(vol)
-    }
+    algorithm = get_vol_algo_dict()
 
     if type(voxels).__name__ == 'UnstructuredGrid':
         polydata = convert_voxel2polydata(voxels)
@@ -76,17 +71,17 @@ def convert_voxel2mesh(voxels: pv.UnstructuredGrid, voxel_size: np.ndarray, algo
     volume = combine_img_poly(image_data, polydata)
     volume_pad = pad_imagedata(volume)
     mesh = algorithm[algo](volume_pad)
-    # mesh = marchingCubes(volume_pad)
     return mesh
 
 
-def convert_img2mesh(imgs: np.ndarray, bounds, size, smooth=False) -> pv.PolyData:
+def convert_img2mesh(imgs: np.ndarray, bounds, size, algo: str, smooth=False) -> pv.PolyData:
     data = (imgs, bounds)
+    algorithm = get_vol_algo_dict()
     volume = create_imagedata(data, size)
     if smooth:
         volume = smooth_image_gauss(volume)
     volume_pad = pad_imagedata(volume)
-    mesh = discreteMarchingCubes(volume_pad)
+    mesh = algorithm[algo](volume_pad)
     return mesh
 
 
@@ -97,3 +92,13 @@ def convert_voxel2polydata(voxels: pv.UnstructuredGrid) -> pv.PolyData:
     polydata = geo_filter.GetOutput()
     polydata_pv = pv.wrap(polydata)
     return polydata_pv
+
+
+def get_vol_algo_dict():
+    algorithm = {
+        'marching cubes': lambda vol: marchingCubes(vol),
+        'discrete marching cubes': lambda vol: discreteMarchingCubes(vol),
+        'synchronized templates 3D': lambda vol: synchronizedTemplates3D(vol),
+        'flying edges': lambda vol: flyingEdges(vol)
+    }
+    return algorithm
