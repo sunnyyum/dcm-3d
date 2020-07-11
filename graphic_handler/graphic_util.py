@@ -20,7 +20,7 @@ def show_obj(file_path, turning=False, output_path=''):
     else:
         _, ext = path.splitext(output_path)
         if ext != '.gif':
-            assert f'{output_path} is not valid extension for gif'
+            raise ValueError(f'{output_path} is not valid extension for gif')
 
         plotter.show(auto_close=False)
         orbit_path = plotter.generate_orbital_path(n_points=36, shift=obj.length)
