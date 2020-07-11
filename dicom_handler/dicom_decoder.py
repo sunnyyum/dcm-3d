@@ -25,6 +25,9 @@ class DicomDecoder:
         if not len(dir_path):
             raise ValueError('please give the directory path')
 
+        if os.path.islink(dir_path):
+            dir_path = os.readlink(dir_path)
+
         self.dir_path = dir_path
         self.info = None
         self.files = None
