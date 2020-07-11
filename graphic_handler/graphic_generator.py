@@ -49,8 +49,15 @@ def convert_pcd2mesh(point_cloud: pv.PolyData) -> pv.PolyData:
     return mesh
 
 
-def convert_voxel2mesh(voxels: pv.UnstructuredGrid, voxel_size: np.ndarray, combine_img=False, imgs=None,
+def convert_voxel2mesh(voxels: pv.UnstructuredGrid, voxel_size: np.ndarray, algo: str, combine_img=False, imgs=None,
                        smooth=False) -> pv.PolyData:
+    algorithm = {
+        'marching cubes': lambda vol: marchingCubes(vol),
+        'discrete marching cubes': lambda vol: discreteMarchingCubes(vol),
+        'synchronized templates 3D': lambda vol: synchronizedTemplates3D(vol),
+        'flying edges': lambda vol: flyingEdges(vol)
+    }
+
     if type(voxels).__name__ == 'UnstructuredGrid':
         polydata = convert_voxel2polydata(voxels)
     elif type(voxels).__name__ == 'PolyData':
@@ -68,7 +75,8 @@ def convert_voxel2mesh(voxels: pv.UnstructuredGrid, voxel_size: np.ndarray, comb
 
     volume = combine_img_poly(image_data, polydata)
     volume_pad = pad_imagedata(volume)
-    mesh = marchingCubes(volume_pad)
+    mesh = algorithm[algo](volume_pad)
+    # mesh = marchingCubes(volume_pad)
     return mesh
 
 
@@ -89,5 +97,3 @@ def convert_voxel2polydata(voxels: pv.UnstructuredGrid) -> pv.PolyData:
     polydata = geo_filter.GetOutput()
     polydata_pv = pv.wrap(polydata)
     return polydata_pv
-
-
